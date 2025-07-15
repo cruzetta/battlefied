@@ -1,0 +1,414 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, X, Menu, ChevronsDown, Gamepad2, Newspaper, Image, Star, Clock, Download, PlayCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+
+// Mock Data - Em um projeto real, isso viria de um CMS (Content Management System)
+const games = [
+    { id: 'bf1942', title: 'Battlefield 1942', year: 2002, image: 'https://placehold.co/600x800/1a1a1a/ffffff?text=BF+1942', curiosity: 'Onde tudo começou. Revolucionou os FPS com batalhas em larga escala combinando infantaria, veículos e aviões.' },
+    { id: 'bf2', title: 'Battlefield 2', year: 2005, image: 'https://placehold.co/600x800/2a2a2a/ffffff?text=BF+2', curiosity: 'Introduziu o combate moderno, esquadrões e o papel de Comandante, definindo o multiplayer tático da década.' },
+    { id: 'bfbc2', title: 'Bad Company 2', year: 2010, image: 'https://placehold.co/600x800/3a3a3a/ffffff?text=BFBC2', curiosity: 'Famoso pelo seu sistema de destruição Frostbite, permitindo derrubar prédios inteiros e mudar o mapa dinamicamente.' },
+    { id: 'bf3', title: 'Battlefield 3', year: 2011, image: 'https://placehold.co/600x800/4a4a4a/ffffff?text=BF+3', curiosity: 'Um salto gráfico e sonoro. A Batalha por Teerã e os jatos se tornaram icônicos na comunidade.' },
+    { id: 'bf4', title: 'Battlefield 4', year: 2013, image: 'https://placehold.co/600x800/5a5a5a/ffffff?text=BF+4', curiosity: 'Aperfeiçoou o conceito de "Levolution", onde eventos massivos como a queda de um arranha-céu transformavam o gameplay.' },
+    { id: 'bf1', title: 'Battlefield 1', year: 2016, image: 'https://placehold.co/600x800/6a6a6a/ffffff?text=BF+1', curiosity: 'Uma corajosa volta à Primeira Guerra Mundial, aclamado por sua atmosfera brutal, imersiva e historicamente rica.' },
+    { id: 'bfv', title: 'Battlefield V', year: 2018, image: 'https://placehold.co/600x800/7a7a7a/ffffff?text=BF+V', curiosity: 'Focado na Segunda Guerra, introduziu mecânicas de construção de fortificações e um modo Battle Royale.' },
+    { id: 'bf2042', title: 'Battlefield 2042', year: 2021, image: 'https://placehold.co/600x800/8a8a8a/ffffff?text=BF+2042', curiosity: 'Retornou ao futuro próximo com mapas gigantescos para 128 jogadores e a introdução de Especialistas no lugar das classes tradicionais.' },
+];
+
+const blogPosts = [
+    { title: '5 estratégias para dominar o mapa Breakthrough no BF2042', tags: ['Estratégias', 'BF2042'], image: 'https://placehold.co/600x400/223344/ffffff?text=Estrategia+Mapa' },
+    { title: 'A história real por trás dos Pombos-Correio de Battlefield 1', tags: ['História', 'BF1'], image: 'https://placehold.co/600x400/443322/ffffff?text=Historia+Real' },
+    { title: 'Comparativo: Qual Battlefield teve o multiplayer mais equilibrado?', tags: ['Análise', 'Comunidade'], image: 'https://placehold.co/600x400/334422/ffffff?text=Analise+Multiplayer' },
+    { title: 'Update 7.2.1 de BF2042: Todas as mudanças e novidades', tags: ['Notícias', 'BF2042'], image: 'https://placehold.co/600x400/442233/ffffff?text=Update+News' },
+];
+
+const galleryItems = {
+    videos: [
+        { id: 'trailer1', title: 'Battlefield 1 Official Reveal Trailer', thumbnail: 'https://placehold.co/400x225/333/fff?text=Trailer+BF1' },
+        { id: 'trailer2', title: 'Battlefield 2042 Official Gameplay Trailer', thumbnail: 'https://placehold.co/400x225/444/fff?text=Trailer+BF2042' },
+        { id: 'trailer3', title: 'Battlefield V Official Story Trailer', thumbnail: 'https://placehold.co/400x225/555/fff?text=Trailer+BFV' },
+    ],
+    wallpapers: [
+        { id: 'wp1', src: 'https://placehold.co/1920x1080/1a2b3c/ffffff?text=Wallpaper+1', alt: 'Wallpaper de soldado em batalha' },
+        { id: 'wp2', src: 'https://placehold.co/1920x1080/3c2b1a/ffffff?text=Wallpaper+2', alt: 'Wallpaper de tanque no deserto' },
+        { id: 'wp3', src: 'https://placehold.co/1920x1080/1b3c2a/ffffff?text=Wallpaper+3', alt: 'Wallpaper de avião de caça' },
+    ]
+};
+
+const reviews = [
+    { user: 'NoobMaster69', rating: 5, game: 'Battlefield 4', comment: 'O auge da franquia! Levolution era simplesmente incrível e a variedade de armas e veículos é imbatível até hoje.' },
+    { user: 'General_Zeh', rating: 4, game: 'Battlefield 1', comment: 'A imersão desse jogo é de outro nível. A atmosfera da Primeira Guerra é pesada e os sons são perfeitos. Só faltou mais customização.' },
+    { user: 'CamperProBR', rating: 3, game: 'Battlefield 2042', comment: 'O começo foi difícil, mas o jogo melhorou muito. Os mapas são enormes, às vezes até demais. Sinto falta das classes antigas.' },
+];
+
+// Componente para o ícone temático
+const ThemedIcon = ({ icon: Icon, className }) => (
+    <Icon className={`inline-block mr-2 text-red-500 ${className}`} />
+);
+
+// Componente para o Header
+const Header = () => {
+    const [isScrolled, setIsScrolled] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 50);
+        };
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const navLinks = [
+        { name: 'Gerações', href: '#generations' },
+        { name: 'Blog', href: '#blog' },
+        { name: 'Galeria', href: '#gallery' },
+        { name: 'Timeline', href: '#timeline' },
+        { name: 'Reviews', href: '#reviews' },
+    ];
+
+    return (
+        <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled || isMenuOpen ? 'bg-black bg-opacity-80 backdrop-blur-sm' : 'bg-transparent'}`}>
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between h-20">
+                    <a href="#" className="text-2xl font-bold tracking-wider uppercase" style={{ fontFamily: "'Stencil', sans-serif" }}>
+                        Battlefield <span className="text-red-500">Hub</span>
+                    </a>
+                    <nav className="hidden lg:flex items-center space-x-8">
+                        {navLinks.map(link => (
+                            <a key={link.name} href={link.href} className="text-gray-300 hover:text-white transition-colors duration-200 uppercase text-sm font-semibold tracking-widest">{link.name}</a>
+                        ))}
+                    </nav>
+                    <div className="flex items-center">
+                        <button className="text-gray-300 hover:text-white mr-4">
+                            <Search />
+                        </button>
+                        <button className="lg:hidden text-gray-300 hover:text-white" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                            {isMenuOpen ? <X /> : <Menu />}
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {/* Mobile Menu */}
+            {isMenuOpen && (
+                <div className="lg:hidden bg-black bg-opacity-90 py-4">
+                    <nav className="flex flex-col items-center space-y-4">
+                        {navLinks.map(link => (
+                            <a key={link.name} href={link.href} onClick={() => setIsMenuOpen(false)} className="text-gray-300 hover:text-white transition-colors duration-200 uppercase text-sm font-semibold tracking-widest">{link.name}</a>
+                        ))}
+                    </nav>
+                </div>
+            )}
+        </header>
+    );
+};
+
+// Componente para a seção Hero
+const HeroSection = () => (
+    <section id="home" className="relative h-screen flex items-center justify-center text-white overflow-hidden">
+        <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute z-0 w-auto min-w-full min-h-full max-w-none"
+            poster="https://placehold.co/1920x1080/000000/ffffff?text=Loading+Battlefield..."
+        >
+            {/* Idealmente, um vídeo de fundo com cenas de trailers. Usando um placeholder. */}
+            {/* <source src="path/to/your/battlefield_montage.mp4" type="video/mp4" /> */}
+        </video>
+        <div className="absolute inset-0 bg-black bg-opacity-60"></div>
+        <div className="relative z-10 text-center p-4">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold uppercase tracking-wider mb-4" style={{ fontFamily: "'Stencil', sans-serif", textShadow: '3px 3px 10px rgba(0,0,0,0.7)' }}>
+                Prepare-se para o campo de batalha
+            </h1>
+            <p className="text-lg md:text-xl max-w-3xl mx-auto mb-8 text-gray-300" style={{ textShadow: '2px 2px 5px rgba(0,0,0,0.7)' }}>
+                Explore todas as gerações, relembre batalhas épicas e fique por dentro das novidades do jogo.
+            </p>
+            <a href="#timeline" className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-md uppercase tracking-widest transition-transform duration-200 hover:scale-105 inline-block">
+                Ver cronologia completa
+            </a>
+        </div>
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-10">
+            <ChevronsDown className="w-8 h-8 animate-bounce" />
+        </div>
+    </section>
+);
+
+// Componente para a seção Gerações
+const GenerationsSection = () => (
+    <section id="generations" className="py-20 bg-zinc-900 text-white" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/metal-grid.png')" }}>
+        <div className="container mx-auto px-4">
+            <h2 className="text-4xl font-bold text-center mb-12 uppercase tracking-wider" style={{ fontFamily: "'Stencil', sans-serif" }}>
+                <ThemedIcon icon={Gamepad2} /> Todas as Gerações
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                {games.map(game => (
+                    <div key={game.id} className="group relative overflow-hidden rounded-lg shadow-lg transform transition-all duration-500 hover:scale-105 hover:shadow-red-500/30">
+                        <img src={game.image} alt={game.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent"></div>
+                        <div className="absolute bottom-0 left-0 p-6 w-full">
+                            <h3 className="text-2xl font-bold uppercase tracking-tight">{game.title}</h3>
+                            <p className="text-red-400 font-semibold">{game.year}</p>
+                            <p className="text-sm text-gray-300 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 h-0 group-hover:h-auto">
+                                {game.curiosity}
+                            </p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    </section>
+);
+
+// Componente para a seção do Blog
+const BlogSection = () => (
+    <section id="blog" className="py-20 bg-zinc-800 text-white">
+        <div className="container mx-auto px-4">
+            <h2 className="text-4xl font-bold text-center mb-12 uppercase tracking-wider" style={{ fontFamily: "'Stencil', sans-serif" }}>
+                <ThemedIcon icon={Newspaper} /> Diário de Bordo
+            </h2>
+            <div className="text-center mb-12">
+                {['Notícias', 'Estratégias', 'História', 'Análise', 'Comunidade'].map(tag => (
+                    <button key={tag} className="bg-zinc-700 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-full m-1 transition-colors duration-200 text-sm">
+                        {tag}
+                    </button>
+                ))}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                {blogPosts.map((post, index) => (
+                    <div key={index} className="bg-zinc-900 rounded-lg overflow-hidden group transform transition-all duration-300 hover:-translate-y-2">
+                        <img src={post.image} alt={post.title} className="w-full h-48 object-cover" />
+                        <div className="p-6">
+                            <div className="mb-2">
+                                {post.tags.map(tag => (
+                                    <span key={tag} className="text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full text-red-500 bg-red-900/50 last:mr-0 mr-1">
+                                        {tag}
+                                    </span>
+                                ))}
+                            </div>
+                            <h3 className="text-lg font-bold group-hover:text-red-500 transition-colors duration-200">{post.title}</h3>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    </section>
+);
+
+// Componente para a Galeria
+const GallerySection = () => {
+    const [activeTab, setActiveTab] = useState('videos');
+
+    return (
+        <section id="gallery" className="py-20 bg-zinc-900 text-white" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/dark-denim-3.png')" }}>
+            <div className="container mx-auto px-4">
+                <h2 className="text-4xl font-bold text-center mb-12 uppercase tracking-wider" style={{ fontFamily: "'Stencil', sans-serif" }}>
+                    <ThemedIcon icon={Image} /> Galeria Multimídia
+                </h2>
+                <div className="flex justify-center mb-8 border-b-2 border-zinc-700">
+                    <button onClick={() => setActiveTab('videos')} className={`py-2 px-6 text-lg font-semibold uppercase tracking-wider transition-colors duration-200 ${activeTab === 'videos' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-400'}`}>Vídeos</button>
+                    <button onClick={() => setActiveTab('wallpapers')} className={`py-2 px-6 text-lg font-semibold uppercase tracking-wider transition-colors duration-200 ${activeTab === 'wallpapers' ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-400'}`}>Wallpapers</button>
+                </div>
+                <div>
+                    {activeTab === 'videos' && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {galleryItems.videos.map(video => (
+                                <div key={video.id} className="relative group cursor-pointer">
+                                    <img src={video.thumbnail} alt={video.title} className="w-full rounded-lg shadow-lg" />
+                                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <PlayCircle className="w-16 h-16 text-white" />
+                                    </div>
+                                    <p className="text-center mt-2 font-semibold">{video.title}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                    {activeTab === 'wallpapers' && (
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {galleryItems.wallpapers.map(wp => (
+                                <a key={wp.id} href={wp.src} target="_blank" rel="noopener noreferrer" className="relative group">
+                                    <img src={wp.src} alt={wp.alt} className="w-full h-full object-cover rounded-lg shadow-lg" />
+                                    <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                        <Download className="w-12 h-12 text-white" />
+                                    </div>
+                                </a>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </section>
+    );
+};
+
+// Componente para a Timeline
+const TimelineSection = () => {
+    const [currentIndex, setCurrentIndex] = useState(Math.floor(games.length / 2));
+    const timelineRef = useRef(null);
+
+    const handleNav = (direction) => {
+        if (direction === 'prev') {
+            setCurrentIndex(prev => (prev > 0 ? prev - 1 : 0));
+        } else {
+            setCurrentIndex(prev => (prev < games.length - 1 ? prev + 1 : games.length - 1));
+        }
+    };
+    
+    useEffect(() => {
+        if (timelineRef.current) {
+            const element = timelineRef.current.children[currentIndex];
+            if(element) {
+                const scrollLeft = element.offsetLeft - (timelineRef.current.offsetWidth / 2) + (element.offsetWidth / 2);
+                timelineRef.current.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+            }
+        }
+    }, [currentIndex]);
+
+    return (
+        <section id="timeline" className="py-20 bg-zinc-800 text-white">
+            <div className="container mx-auto px-4">
+                <h2 className="text-4xl font-bold text-center mb-4 uppercase tracking-wider" style={{ fontFamily: "'Stencil', sans-serif" }}>
+                    <ThemedIcon icon={Clock} /> Evolução da Franquia
+                </h2>
+                <p className="text-center text-gray-400 mb-12 max-w-2xl mx-auto">Navegue pela linha do tempo para ver como Battlefield se transformou ao longo dos anos.</p>
+                
+                <div className="relative">
+                    {/* Game Info Display */}
+                    <div className="text-center mb-12 min-h-[150px]">
+                        <div className="transition-opacity duration-500">
+                            <h3 className="text-5xl font-bold text-red-500" style={{ fontFamily: "'Stencil', sans-serif" }}>{games[currentIndex].year}</h3>
+                            <p className="text-3xl font-semibold tracking-wider mt-2">{games[currentIndex].title}</p>
+                            <p className="text-gray-300 mt-4 max-w-xl mx-auto">{games[currentIndex].curiosity}</p>
+                        </div>
+                    </div>
+
+                    {/* Timeline Navigation */}
+                    <div className="flex items-center justify-center">
+                        <button onClick={() => handleNav('prev')} disabled={currentIndex === 0} className="p-2 rounded-full bg-zinc-700 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200">
+                            <ChevronLeft />
+                        </button>
+                        <div ref={timelineRef} className="flex items-center overflow-x-hidden mx-4 w-full max-w-4xl">
+                            {games.map((game, index) => (
+                                <div
+                                    key={game.id}
+                                    onClick={() => setCurrentIndex(index)}
+                                    className="flex-shrink-0 flex flex-col items-center cursor-pointer p-4 transition-all duration-300"
+                                >
+                                    <div className={`w-4 h-4 rounded-full transition-colors duration-300 ${currentIndex === index ? 'bg-red-500 scale-150' : 'bg-zinc-600'}`}></div>
+                                    <span className={`mt-2 text-xs transition-colors duration-300 ${currentIndex === index ? 'text-white font-bold' : 'text-gray-500'}`}>{game.year}</span>
+                                </div>
+                            ))}
+                        </div>
+                        <button onClick={() => handleNav('next')} disabled={currentIndex === games.length - 1} className="p-2 rounded-full bg-zinc-700 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200">
+                            <ChevronRight />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    );
+};
+
+
+// Componente para Reviews
+const ReviewsSection = () => (
+    <section id="reviews" className="py-20 bg-zinc-900 text-white" style={{ backgroundImage: "url('https://www.transparenttextures.com/patterns/subtle-carbon.png')" }}>
+        <div className="container mx-auto px-4">
+            <h2 className="text-4xl font-bold text-center mb-12 uppercase tracking-wider" style={{ fontFamily: "'Stencil', sans-serif" }}>
+                <ThemedIcon icon={Star} /> Voz do Pelotão
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {reviews.map((review, index) => (
+                    <div key={index} className="bg-zinc-800 p-6 rounded-lg border border-zinc-700 hover:border-red-500 transition-colors duration-300">
+                        <div className="flex items-center mb-4">
+                            <div className="flex text-yellow-400">
+                                {[...Array(5)].map((_, i) => (
+                                    <Star key={i} fill={i < review.rating ? 'currentColor' : 'none'} className="w-5 h-5" />
+                                ))}
+                            </div>
+                            <span className="ml-auto text-sm font-bold bg-zinc-700 px-2 py-1 rounded">{review.game}</span>
+                        </div>
+                        <p className="text-gray-300 mb-4 italic">"{review.comment}"</p>
+                        <p className="text-right font-semibold text-red-400">- {review.user}</p>
+                    </div>
+                ))}
+            </div>
+            <div className="text-center mt-16">
+                <h3 className="text-2xl font-bold mb-4">Deixe sua avaliação</h3>
+                <button className="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-md uppercase tracking-widest transition-transform duration-200 hover:scale-105">
+                    Avaliar Agora
+                </button>
+            </div>
+        </div>
+    </section>
+);
+
+// Componente para o Footer
+const Footer = () => {
+    const [showMeme, setShowMeme] = useState(false);
+
+    // Easter Egg: Som ao clicar na 'granada'
+    const playSound = () => {
+        // Em um app real, usaríamos uma biblioteca de áudio.
+        // Simulando com um log por enquanto.
+        console.log("BEEP! BEEP! BEEP!");
+        setShowMeme(true);
+        setTimeout(() => setShowMeme(false), 3000);
+    };
+
+    return (
+        <footer className="bg-black text-gray-400 py-12">
+            <div className="container mx-auto px-4 text-center">
+                <p className="text-2xl font-bold tracking-wider uppercase mb-4" style={{ fontFamily: "'Stencil', sans-serif" }}>
+                    Battlefield <span className="text-red-500">Hub</span>
+                </p>
+                <p className="mb-4">O ponto de encontro não oficial para todos os soldados.</p>
+                <div className="flex justify-center space-x-6 mb-8">
+                    {/* Links de redes sociais */}
+                </div>
+                <p className="text-sm">
+                    &copy; {new Date().getFullYear()} Battlefield Hub. Todos os direitos reservados.
+                    <br />
+                    Battlefield é uma marca registrada da EA Digital Illusions CE AB.
+                </p>
+                <div className="mt-6">
+                    {/* Easter Egg */}
+                    <button onClick={playSound} title="O que é isso?" className="text-2xl transform transition-transform hover:rotate-12 hover:scale-125">
+                        💣
+                    </button>
+                </div>
+                {showMeme && (
+                    <div className="fixed bottom-10 right-10 bg-yellow-400 text-black p-4 rounded-lg shadow-lg z-50">
+                        <p className="font-bold">PROMOTED! PROMOTED!</p>
+                    </div>
+                )}
+            </div>
+        </footer>
+    );
+};
+
+
+// Componente principal da aplicação
+export default function App() {
+    return (
+        <div className="bg-zinc-900">
+            <style>
+                {`
+                @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap');
+                @import url('https://fonts.cdnfonts.com/css/stencil');
+                html { scroll-behavior: smooth; }
+                body { font-family: 'Roboto', sans-serif; }
+                `}
+            </style>
+            <Header />
+            <main>
+                <HeroSection />
+                <GenerationsSection />
+                <BlogSection />
+                <GallerySection />
+                <TimelineSection />
+                <ReviewsSection />
+            </main>
+            <Footer />
+        </div>
+    );
+}
